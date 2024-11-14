@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:testCase xmlns:con="http://eviware.com/soapui/config" id="249c1ad0-2a01-4df7-89ee-50c9dec160ff" discardOkResults="false" failOnError="false" failTestCaseOnErrors="true" keepSession="false" name="Flujo Navegacion como ADMIN" searchProperties="true" timeout="0">
+  <con:settings id="049bf4c4-8ac0-4f29-98ec-2311e7f71222">
+    <con:setting id="249c1ad0-2a01-4df7-89ee-50c9dec160fffileName">Flujo-Navegacion-como-ADMIN</con:setting>
+  </con:settings>
+  <con:testStep type="calltestcase" name="ejecutar Login USER" id="bb804eba-cb5a-4d28-8ecd-64dfe0e668d3">
+    <con:settings/>
+    <con:config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="con:RunTestCaseStep">
+      <con:targetTestCase>db9d31b6-7a46-4f18-94eb-2954e9335989</con:targetTestCase>
+      <con:properties>
+        <con:property>
+          <con:name>admin_token_tc</con:name>
+          <con:value>eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyLGFkbWluQGVtYWlsLmNvbSIsInJvbGUiOiJBRE1JTiIsImlzcyI6ImNvbS5taWNyb2NvbXBhbnkiLCJpYXQiOjE3MzE0MjAyNDEsImV4cCI6MTczMTUwNjY0MX0.jgB_y1lUBQp-G00J2HbkwqdJHKsn2rDWAz1MC-iS33QcK1TW0EkkmkLLbrRaxGhnJ4Fsj8sMqt-elIFD0AgpPQ</con:value>
+        </con:property>
+      </con:properties>
+      <con:returnProperties>
+        <con:entry>admin_token_tc</con:entry>
+      </con:returnProperties>
+      <con:runMode>PARALLELL</con:runMode>
+    </con:config>
+  </con:testStep>
+  <con:testStep type="datasource" name="productDataFromDB" id="93d24c59-83cc-4851-9003-9185b78af492">
+    <con:settings/>
+    <con:config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="con:DataSourceStep">
+      <con:dataSource type="Groovy">
+        <con:configuration>
+          <script>import groovy.sql.Sql
+
+// Preconditions: properties "name" and "serial" exist
+log.info("Reading from db ... ")
+
+// Get current row (iteration of n asked to load)
+def it = testRunner.testCase.testSteps["productDataFromDB"].currentRow;
+log.info("iter: ${it}")
+
+// DB params
+def sql = Sql.newInstance('jdbc:mysql://localhost:3306/productsdb', 'products_user', 'rapi123', 'com.mysql.jdbc.Driver')
+
+sql.eachRow("SELECT * FROM products Limit 1 OFFSET ${it} "){ row ->
+	log.info("row: ${row.name} ${row.serial}")
+	result['name'] = row.name
+	result['serial'] = row.serial
+}
+
+sql.close()</script>
+        </con:configuration>
+      </con:dataSource>
+      <con:shared>true</con:shared>
+      <con:restartShared>true</con:restartShared>
+      <con:property>name</con:property>
+      <con:property>serial</con:property>
+      <con:startRow>1</con:startRow>
+      <con:endRow>10</con:endRow>
+      <con:recordsPerIteration>1</con:recordsPerIteration>
+      <con:completeLastOperation>true</con:completeLastOperation>
+      <con:trimValues>false</con:trimValues>
+      <con:entitizeValues>false</con:entitizeValues>
+      <con:restartOnRun>true</con:restartOnRun>
+      <con:expandProperties>false</con:expandProperties>
+      <con:stopDatasourceExhausted>false</con:stopDatasourceExhausted>
+    </con:config>
+  </con:testStep>
+  <con:testStep type="datasourceloop" name="CreateLoop" id="8fc03f39-5706-4f40-80ad-a8e3569d3f72">
+    <con:settings/>
+    <con:config>
+      <dataSourceStep>productDataFromDB</dataSourceStep>
+      <targetStep>create</targetStep>
+      <discardResults>true</discardResults>
+    </con:config>
+  </con:testStep>
+  <con:properties/>
+  <con:reportParameters/>
+</con:testCase>
